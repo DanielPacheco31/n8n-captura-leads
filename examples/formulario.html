@@ -1,0 +1,38 @@
+<!-- Fragmento del formulario de la landing que envía los datos al webhook de n8n -->
+<form id="form-contacto">
+  <input name="nombre" placeholder="Nombre" required>
+  <input name="email" type="email" placeholder="Correo" required>
+  <input name="telefono" placeholder="Celular (opcional)">
+  <select name="servicio">
+    <option value="sitio-web">Sitio web</option>
+    <option value="sistema-a-medida">Sistema a medida</option>
+    <option value="soporte">Soporte</option>
+    <option value="otro">Otro</option>
+  </select>
+  <textarea name="mensaje" placeholder="¿Qué necesitas?" required></textarea>
+  <!-- Honeypot: oculto para personas, los bots lo llenan -->
+  <input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px">
+  <button>Enviar</button>
+  <p id="estado" role="status"></p>
+</form>
+
+<script>
+  const WEBHOOK = 'https://TU-INSTANCIA-N8N/webhook/leads-somosbits';
+  document.getElementById('form-contacto').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const estado = document.getElementById('estado');
+    const datos = Object.fromEntries(new FormData(e.target));
+    datos.origen = 'landing';
+    try {
+      const r = await fetch(WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
+      estado.textContent = r.ok ? '¡Listo! Te escribimos pronto.' : 'Revisa los datos e intenta de nuevo.';
+      if (r.ok) e.target.reset();
+    } catch {
+      estado.textContent = 'No pudimos enviar el formulario. Intenta más tarde.';
+    }
+  });
+</script>
